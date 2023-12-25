@@ -66,7 +66,7 @@ app.use(express.static('public'));
 
 // Route to serve the HTML file
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+  res.sendFile(__dirname + '/index.html');
 });
 
 const messages = [];
