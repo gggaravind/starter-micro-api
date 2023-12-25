@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neuropsych Platform</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    #container {
+      max-width: 800px;
+      margin: auto;
+    }
+    #chat {
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      max-height: 400px;
+      padding: 10px;
+    }
+    #messages li {
+      margin-bottom: 10px;
+      word-wrap: break-word;
+    }
+    #message-input {
+      display: flex;
+      border-top: 1px solid #e0e0e0;
+      padding: 10px;
+    }
+    #m {
+      flex-grow: 1;
+      padding: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+    #send-button {
+      padding: 10px;
+      border: none;
+      background-color: #3fa5a4;
+      color: #ffffff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #user-form {
+      margin-top: 20px;
+    }
+    #name {
+      padding: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+    #set-name-button {
+      padding: 10px;
+      border: none;
+      background-color: #3fa5a4;
+      color: #ffffff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #chat-options {
+      margin-top: 10px;
+    }
+    #chat-type {
+      padding: 8px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="user-form">
+      <input type="text" id="name" placeholder="Your Name" />
+      <button id="set-name-button">Set Name</button>
+    </div>
+
+    <div id="chat-options">
+      <select id="chat-type">
+        <option value="community">Community Chat</option>
+        <option value="private">Private Chat</option>
+      </select>
+    </div>
+
+    <div id="chat">
+      <ul id="messages"></ul>
+      <div id="message-input">
+        <input id="m" autocomplete="off" placeholder="Type your message..." />
+        <button id="send-button">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script>
+    $(function () {
+      var socket = io();
+
+      // Handle setting user's name
+      $('#set-name-button').click(function () {
+        const name = $('#name').val();
+        socket.emit('set name', name);
+        $('#user-form').hide();
+      });
+
+      // Handle the chat type selection
+      $('#chat-type').change(function () {
+        const chatType = $(this).val();
+        socket.emit('set chat type', chatType);
+      });
+
+      // Handle sending chat messages
+      $('#send-button').click(function () {
+        const message = $('#m').val();
+        if (message.trim() !== '') {
+          socket.emit('chat message', { sender: $('#name').val() || 'User', content: message });
+          $('#m').val('');
+        }
+      });
+
+      // Handle receiving chat messages
+      socket.on('chat message', function (msg) {
+        $('#messages').append($('<li>').text(msg.sender + ': ' + msg.content));
+        scrollChatToBottom();
+      });
+
+      // Handle receiving chat history
+      socket.on('chat history', function (history) {
+        for (const msg of history) {
+          $('#messages').append($('<li>').text(msg.sender + ': ' + msg.content));
+        }
+        scrollChatToBottom();
+      });
+
+      // Scroll the chat to the bottom
+      function scrollChatToBottom() {
+        var chat = document.getElementById('messages');
+        chat.scrollTop = chat.scrollHeight;
+      }
+    });
+  </script>
+</body>
+</html>
